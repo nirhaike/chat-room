@@ -14,7 +14,6 @@ public class Server implements Runnable {
 	public Server() {
 		clients = new ArrayList<ClientHandler>();
 		ss = null;
-		// CHANGE!
 		running = false;
 	}
 	
