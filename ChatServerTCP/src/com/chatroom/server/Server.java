@@ -1,3 +1,4 @@
+package com.chatroom.server;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -31,7 +32,8 @@ public class Server implements Runnable {
 				Socket socket = ss.accept();
 				// --- handshake ---
 				boolean passedHandshake = false;
-				
+				// TODO handshake here!
+				// if passed, changed 'passedHandshake' to true
 				if (passedHandshake) {
 					// --- add to the clients arraylist ---
 					ClientHandler handler = new ClientHandler(socket);
@@ -56,7 +58,11 @@ public class Server implements Runnable {
 			e.printStackTrace();
 		}
 		for (ClientHandler client : clients) {
-			
+			try {
+				client.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 		}
 	}
 	

@@ -1,3 +1,4 @@
+package com.chatroom.server;
 import java.util.Scanner;
 
 public class Main {
@@ -8,7 +9,6 @@ public class Main {
 		Thread serverThread = new Thread(server);
 		// run the server
 		serverThread.start();
-		
 		
 		server.close();
 		//Scanner sc = new Scanner(System.in);
