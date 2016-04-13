@@ -9,7 +9,6 @@ public class Main {
 		// run the server
 		serverThread.start();
 		
-		
 		server.close();
 		//Scanner sc = new Scanner(System.in);
 		//System.out.println(sc.nextLine());
