@@ -6,7 +6,7 @@ public class ClientHandler implements Runnable {
 
 	public static final String SERVER_ACK = "servercheck";
 	public static final String CLIENT_RES = "servergood";
-	
+	// try;
 	public static final String CLIENT_ACK = "clientcheck";
 	public static final String SERVER_RES = "clientgood";
 	
