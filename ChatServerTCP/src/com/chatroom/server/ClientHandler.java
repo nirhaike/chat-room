@@ -37,7 +37,7 @@ public class ClientHandler implements Runnable {
 	public boolean send(String data) {
 		
 		try{
-		out = new PrintWriter(socket.getOutputStream(), true);
+		PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
 		out.println(data);
 		out.flush();
 		}
