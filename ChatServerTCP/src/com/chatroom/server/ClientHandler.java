@@ -45,6 +45,8 @@ public class ClientHandler implements Runnable {
 
 	public void close() throws IOException {
 		this.socket.close();
+		this.out.close();
+		this.input.close();
 	}
 
 	/**
@@ -53,7 +55,11 @@ public class ClientHandler implements Runnable {
 	 */
 
 	public String receive(){
-		return "";
+		try {
+			return this.input.readLine();
+		} catch (IOException e) {
+			return "Error";
+		}
 	}
 	
 	
