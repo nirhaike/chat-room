@@ -8,6 +8,8 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.Scanner;
 
+import com.chatroom.Utils;
+
 public class Client implements Runnable {
 	
 	private Socket s;
@@ -19,8 +21,22 @@ public class Client implements Runnable {
 		writer = new PrintWriter(s.getOutputStream());
 		reader = new BufferedReader(new InputStreamReader(s.getInputStream())); 
 	}
-
+	
 	public void run() {
+		// handle the handshake
+		String handshake = "";
+		try {
+			handshake = reader.readLine();
+		} catch (IOException e) {
+			System.out.println("Couldn't connect to the server...");
+		}
+		// if the handshake is not correct
+		if (!handshake.equals(Utils.getDate())) {
+			close();
+			return;
+		}
+		// send the handshake
+		writer.write(Utils.changeDateHandShake(handshake));
 		// init the scanner
 		Scanner sc = new Scanner(System.in);
 		String msg = sc.nextLine();
@@ -28,6 +44,25 @@ public class Client implements Runnable {
 			writer.write(msg);
 			// get the next message from the client
 			msg = sc.nextLine();
+		}
+		sc.close();
+	}
+	
+	/**
+	 * Closes the connection.
+	 * @pre The client is active
+	 */
+	public void close() {
+		writer.close();
+		try {
+			reader.close();
+		} catch (IOException e) {
+			System.err.println("Error occured while closing the reader.");
+		}
+		try {
+			s.close();
+		} catch (IOException e) {
+			System.err.println("Error occured while closing the client socket.");
 		}
 	}
 	
