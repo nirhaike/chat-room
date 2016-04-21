@@ -1,6 +1,8 @@
 package com.chatroom.server;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 
@@ -13,10 +15,25 @@ public class ClientHandler implements Runnable {
 
 	private Socket socket;
 	private boolean connected;
-
+	private PrintWriter out;
+	private BufferedReader input;
+	
 	public ClientHandler(Socket s) {
 		this.socket = s;
 		connected = true;
+		try {
+			out = new PrintWriter(socket.getOutputStream(), true);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		try {
+			input = new BufferedReader(new InputStreamReader(
+					socket.getInputStream()));
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	// send, receive, close, check
@@ -34,17 +51,19 @@ public class ClientHandler implements Runnable {
 	 * @pre data != null
 	 * @post $ret: whether the message was sent
 	 */
-	public boolean send(String data) {
-		
-		try{
-		PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
-		out.println(data);
+
+	public String receive(){
+		return "";
+	}
+	
+	
+	
+	public boolean send(String data) throws IOException {
+
+		this.out.println(data);
 		out.flush();
-		}
-		catch (IOException e) {
-			return false;
-		}
 		return true;
+		
 		
 		}
 }
