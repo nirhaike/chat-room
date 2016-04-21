@@ -34,9 +34,11 @@ public class Server implements Runnable {
 				boolean passedHandshake = false;
 				// TODO handshake here!
 				// if passed, changed 'passedHandshake' to true
+				ClientHandler handler = new ClientHandler(socket);
+				
 				if (passedHandshake) {
 					// --- add to the clients arraylist ---
-					ClientHandler handler = new ClientHandler(socket);
+					
 					clients.add(handler);
 					// --- run the client handler ---
 					Thread clientThread = new Thread(handler);
