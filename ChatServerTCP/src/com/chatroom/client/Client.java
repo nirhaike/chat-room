@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Scanner;
@@ -26,9 +27,8 @@ public class Client implements Runnable {
 	private PrintWriter writer;
 	private BufferedReader reader;
 	
-	// arraylist of last acknowledge messages 
-	private ArrayList<String> ack;
-	
+	private Receiver receiver;
+		
 	private boolean active;
 	
 	public Client(String addr, int port) throws UnknownHostException, IOException {
@@ -43,40 +43,19 @@ public class Client implements Runnable {
 		writer.flush();
 	}
 	
-	public String recv() {
+	public synchronized String recvAck(int timeout) throws IOException {
+		return receiver.recvAck(timeout);
+	}
+	
+	public synchronized String recv() {
 		String msg;
-		while (true) {
-			try {
-				msg = reader.readLine();
-			} catch (IOException e) {
-				System.out.println("Lost connection with the remote server");
-				return CONNECTION_CLOSED;
-			}
-			if (isAcknowledgeResponse(msg)) {
-				ack.add(msg);
-			} else if (isAcknowledgeRequest(msg)) {
-				// respond to the acknowledge
-				
-			} else {
-				return msg;
-			}
+		try {
+			msg = reader.readLine();
+		} catch (IOException e) {
+			System.out.println("Lost connection with the remote server");
+			return CONNECTION_CLOSED;
 		}
-	}
-	
-	/**
-	 * @param str a message from the server
-	 * @return whether this message is an acknowledge request response
-	 */
-	public boolean isAcknowledgeResponse(String str) {
-		return str.equals(SERVER_RES);
-	}
-	
-	/**
-	 * @param str a message from the server
-	 * @return whether this message is an acknowledge request request
-	 */
-	public boolean isAcknowledgeRequest(String str) {
-		return str.equals(SERVER_ACK);
+		return msg;
 	}
 
 	
@@ -93,6 +72,9 @@ public class Client implements Runnable {
 		send(Utils.changeDateHandShake(handshake));
 		// the socket is now active
 		active = true;
+		// start the receiver
+		receiver = new Receiver(this);
+		(new Thread(receiver)).start();
 		// init the scanner
 		Scanner sc = new Scanner(System.in);
 		String msg = sc.nextLine();

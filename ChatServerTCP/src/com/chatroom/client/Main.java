@@ -30,6 +30,14 @@ public class Main {
 			}
 			// send acknowledge
 			c.send(Client.CLIENT_ACK);
+			// get the response
+			try {
+				if (!c.recvAck(1000).equals(Client.SERVER_RES)) {
+					c.close();
+				}
+			} catch (IOException ioe) {
+				c.close();
+			}
 		}
 	}
 	
