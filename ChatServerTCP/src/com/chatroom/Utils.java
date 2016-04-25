@@ -26,12 +26,7 @@ public class Utils {
 		Date hourBef = new Date(d.getTime()-1000*60*60);
 		return format.format(hourBef);
 	}
-	
-	public static void main(String[] args) {
-		System.out.println(getDate());
-		System.out.println(changeDateHandShake(getDate()));
-	}
-	
+
 	/**
 	 * @return the current date with the format "yyyy/mm/dd/hh"
 	 */
