@@ -61,7 +61,8 @@ public class Receiver implements Runnable {
 			}
 			// a message packet
 			else {
-				msgList.add(p);
+				//msgList.add(p);
+				System.out.println(p.data);
 			}
 		}
 	}

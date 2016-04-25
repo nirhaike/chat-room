@@ -26,10 +26,11 @@ public class Client implements Runnable {
 	private Socket s;
 	private PrintWriter writer;
 	private BufferedReader reader;
-	
 	private Receiver receiver;
 		
 	private boolean active;
+	
+	private String nickname;
 	
 	public Client(String addr, int port) throws UnknownHostException, IOException {
 		s = new Socket(addr, port);
@@ -53,6 +54,7 @@ public class Client implements Runnable {
 			msg = reader.readLine();
 		} catch (IOException e) {
 			System.out.println("Lost connection with the remote server");
+			close();
 			return CONNECTION_CLOSED;
 		}
 		return msg;
@@ -60,6 +62,11 @@ public class Client implements Runnable {
 
 	
 	public void run() {
+		// init the scanner
+		Scanner sc = new Scanner(System.in);
+		// ask for a nickname
+		System.out.print("Please enter your nickname: ");
+		nickname = sc.nextLine();
 		// handle the handshake
 		String handshake = "";
 		handshake = recv();
@@ -70,16 +77,16 @@ public class Client implements Runnable {
 		}
 		// send the handshake
 		send(Utils.changeDateHandShake(handshake));
+		// send the nickname
+		send(nickname);
 		// the socket is now active
 		active = true;
 		// start the receiver
 		receiver = new Receiver(this);
 		(new Thread(receiver)).start();
-		// init the scanner
-		Scanner sc = new Scanner(System.in);
 		String msg = sc.nextLine();
 		while (!msg.equals("-q")) {
-			send(msg);
+			send("msg: " + msg);
 			// get the next message from the client
 			msg = sc.nextLine();
 		}
