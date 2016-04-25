@@ -22,8 +22,11 @@ public class Main {
 		t.start();
 		// send the acknowledges
 		while (true) {
+			if (c.isClosed()) {
+				break;
+			}
+			/**
 			if (c.isActive()) {
-				/**
 				// sleep 5 seconds
 				try {
 					Thread.sleep(5000);
@@ -42,9 +45,10 @@ public class Main {
 					c.close();
 					break;
 				}
-				*/
 			}
+			*/
 		}
+		System.out.println("Here!");
 	}
 	
 }

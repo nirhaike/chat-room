@@ -42,7 +42,7 @@ public class Server implements Runnable {
 				clients.add(handler);
 				debug("started client");
 			} catch (IOException e) {
-				debug("Server closed safety");
+				break;
 			}
 		}
 	}
@@ -72,16 +72,19 @@ public class Server implements Runnable {
 		System.out.println(str);
 	}
 	
-	public void close() {
+	public synchronized void close() {
 		try {
 			running = false;
 			ss.close();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		for (ClientHandler client : clients) {
+		for (int i = 0; i < clients.size(); i++) {
+			ClientHandler client = clients.get(i);
 			client.close();
+			i--;
 		}
+		debug("Server closed safety");
 	}
 	
 }

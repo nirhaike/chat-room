@@ -29,6 +29,7 @@ public class Client implements Runnable {
 	private Receiver receiver;
 		
 	private boolean active;
+	private boolean closed;
 	
 	private String nickname;
 	
@@ -96,8 +97,9 @@ public class Client implements Runnable {
 	 * Closes the connection.
 	 * @pre The client is active
 	 */
-	public synchronized void close() {
+	public void close() {
 		if (active) {
+			System.out.println("Closingggg" + closed);
 			writer.close();
 			try {
 				reader.close();
@@ -110,11 +112,17 @@ public class Client implements Runnable {
 				System.err.println("Error occured while closing the client socket.");
 			}
 			active = false;
+			closed = true;
+			System.out.println(closed);
 		}
 	}
 	
 	public boolean isActive() {
 		return active;
+	}
+	
+	public boolean isClosed() {
+		return closed;
 	}
 	
 }

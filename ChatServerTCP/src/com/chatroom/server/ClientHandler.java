@@ -79,10 +79,10 @@ public class ClientHandler implements Runnable {
 	public void run() {
 		// do the handshake
 		connected = connected && handShake();
-		System.out.println("Done handshake with " + connected + " result.");
+		server.debug("Done handshake with " + connected + " result.");
 		// get nickname
 		nickname = receive();
-		System.out.println("Got nickname " + nickname);
+		server.debug("Got nickname " + nickname);
 		// TODO ~start acknowledges here!~
 		while (connected) {
 			String msg = receive();
@@ -90,15 +90,15 @@ public class ClientHandler implements Runnable {
 				connected = false;
 				break;
 			}
-			System.out.println("check msg: " + msg);
+			// if it's a chat message
 			if (msg.startsWith("msg: ")) {
-				System.out.println("Good msg");
 				server.sendMessage(msg.substring(5), this);
 			}
 		}
 	}
 
-	public synchronized void close() {
+	public void close() {
+		System.out.println("Closing!");
 		if (this.connected) {
 			this.connected = false;
 			this.out.close();
@@ -129,7 +129,7 @@ public class ClientHandler implements Runnable {
 		}
 	}
 
-	public boolean send(String data) {
+	public synchronized boolean send(String data) {
 		try {
 			this.out.println(data);
 			out.flush();
