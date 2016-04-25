@@ -4,6 +4,8 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 
+import com.chatroom.Utils;
+
 public class Server implements Runnable {
 
 	public static final int PORT = 6655;
@@ -27,28 +29,41 @@ public class Server implements Runnable {
 		} catch (IOException e) {
 			System.out.println("Can't listen on port " + PORT);
 		}
+		// the current client id
+		int currId = 0; 
+		// run
 		while (running) {
 			try {
 				Socket socket = ss.accept();
-				// --- handshake ---
-				boolean passedHandshake = false;
-				// TODO handshake here!
-				// if passed, changed 'passedHandshake' to true
-				ClientHandler handler = new ClientHandler(socket);
-				
-				if (passedHandshake) {
-					// --- add to the clients arraylist ---
-					
-					clients.add(handler);
-					// --- run the client handler ---
-					Thread clientThread = new Thread(handler);
-					clientThread.start();
-				} else {
-					socket.close();
-				}
+				// add the client
+				System.out.println("got client");
+				ClientHandler handler = new ClientHandler(socket, currId++, this);
+				Thread clientThread = new Thread(handler);
+				clientThread.start();
+				System.out.println("started client");
 			} catch (IOException e) {
 				System.out.println("Server closed safety");
 			}
+		}
+	}
+	
+	public void removeClient(ClientHandler client) {
+		for (int i = 0; i < clients.size(); i++) {
+			ClientHandler c = clients.get(i);
+			if (client == c) {
+				clients.remove(i);
+				return;
+			}
+		}
+	}
+	
+	public void sendMessage(String message, ClientHandler sender) {
+		// create the message format
+		String finalMsg = sender.getNickname() + "-" + sender.getId() + " (" +
+				Utils.getTime() + ", #" + sender.getNumOfMessages() + "): " + message;
+		// send it to the clients
+		for (ClientHandler client : clients) {
+			client.send(finalMsg);
 		}
 	}
 	
@@ -60,11 +75,7 @@ public class Server implements Runnable {
 			e.printStackTrace();
 		}
 		for (ClientHandler client : clients) {
-			try {
-				client.close();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
+			client.close();
 		}
 	}
 	

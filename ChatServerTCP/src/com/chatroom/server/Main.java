@@ -9,10 +9,12 @@ public class Main {
 		Thread serverThread = new Thread(server);
 		// run the server
 		serverThread.start();
-		
+		Scanner sc = new Scanner(System.in);
+		String command = sc.nextLine();
+		while (!command.equals("-q")) {
+			command = sc.nextLine();
+		}
 		server.close();
-		//Scanner sc = new Scanner(System.in);
-		//System.out.println(sc.nextLine());
 		
 	}
 	

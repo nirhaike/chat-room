@@ -36,5 +36,15 @@ public class Utils {
 		Date d = cal.getTime();
 		return df.format(d);
 	}
+	
+	/**
+	 * @return the current time with the format "hh:mm:ss"
+	 */
+	public static String getTime() {
+		Calendar cal = Calendar.getInstance();
+		DateFormat df = new SimpleDateFormat("HH:mm:ss");
+		Date d = cal.getTime();
+		return df.format(d);
+	}
 
 }
