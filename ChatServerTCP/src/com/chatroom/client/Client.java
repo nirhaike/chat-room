@@ -40,7 +40,7 @@ public class Client implements Runnable {
 	}
 	
 	public void send(String message) {
-		writer.write(message);
+		writer.write(message + "\n");
 		writer.flush();
 	}
 	
@@ -53,8 +53,9 @@ public class Client implements Runnable {
 		try {
 			msg = reader.readLine();
 		} catch (IOException e) {
-			System.out.println("Lost connection with the remote server");
-			close();
+			if (isActive()) {
+				close();
+			}
 			return CONNECTION_CLOSED;
 		}
 		return msg;
@@ -70,13 +71,9 @@ public class Client implements Runnable {
 		// handle the handshake
 		String handshake = "";
 		handshake = recv();
-		// if the handshake is not correct
-		if (!handshake.equals(Utils.getDate())) {
-			close();
-			return;
-		}
 		// send the handshake
-		send(Utils.changeDateHandShake(handshake));
+		String sendHandshake = Utils.changeDateHandShake(handshake);
+		send(sendHandshake);
 		// send the nickname
 		send(nickname);
 		// the socket is now active
@@ -90,26 +87,30 @@ public class Client implements Runnable {
 			// get the next message from the client
 			msg = sc.nextLine();
 		}
+		close();
 		sc.close();
+		System.out.println("Disconnected.");
 	}
 	
 	/**
 	 * Closes the connection.
 	 * @pre The client is active
 	 */
-	public void close() {
-		writer.close();
-		try {
-			reader.close();
-		} catch (IOException e) {
-			System.err.println("Error occured while closing the reader.");
+	public synchronized void close() {
+		if (active) {
+			writer.close();
+			try {
+				reader.close();
+			} catch (IOException e) {
+				System.err.println("Error occured while closing the reader.");
+			}
+			try {
+				s.close();
+			} catch (IOException e) {
+				System.err.println("Error occured while closing the client socket.");
+			}
+			active = false;
 		}
-		try {
-			s.close();
-		} catch (IOException e) {
-			System.err.println("Error occured while closing the client socket.");
-		}
-		active = false;
 	}
 	
 	public boolean isActive() {

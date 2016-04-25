@@ -42,13 +42,16 @@ public class Receiver implements Runnable {
 			}
 			// check if the timeout passed
 			if (getTime()-currTime >= timeout)
-				throw new IOException("Tiemout!");
+				throw new IOException("Timeout!");
 		}
 	}
 	
 	public void run() {
-		while (true) {
+		while (client.isActive()) {
 			String data = client.recv();
+			if (data == null || !client.isActive()) {
+				break;
+			}
 			Packet p = new Packet(getTime(), data);
 			// if the server responded an acknowledge
 			if (isAcknowledgeResponse(data)) {
@@ -62,7 +65,7 @@ public class Receiver implements Runnable {
 			// a message packet
 			else {
 				//msgList.add(p);
-				System.out.println(p.data);
+				System.out.println(data);
 			}
 		}
 	}

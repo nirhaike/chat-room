@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
-import java.util.Date;
 
 import com.chatroom.Utils;
 
@@ -19,7 +18,7 @@ public class ClientHandler implements Runnable {
 	private Server server;
 	
 	private Socket socket;
-	private boolean connected, passedHandshake;
+	private boolean connected;
 	private PrintWriter out;
 	private BufferedReader input;
 	
@@ -83,29 +82,38 @@ public class ClientHandler implements Runnable {
 		System.out.println("Done handshake with " + connected + " result.");
 		// get nickname
 		nickname = receive();
-		System.out.println("Got nickname");
+		System.out.println("Got nickname " + nickname);
 		// TODO ~start acknowledges here!~
 		while (connected) {
 			String msg = receive();
+			if (msg == null || !connected) { // if disconnected
+				connected = false;
+				break;
+			}
+			System.out.println("check msg: " + msg);
 			if (msg.startsWith("msg: ")) {
+				System.out.println("Good msg");
 				server.sendMessage(msg.substring(5), this);
 			}
 		}
 	}
 
-	public void close() {
-		this.out.close();
-		try {
-			this.input.close();
-		} catch (IOException e) {
-			e.printStackTrace();
+	public synchronized void close() {
+		if (this.connected) {
+			this.connected = false;
+			this.out.close();
+			try {
+				this.input.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			try {
+				this.socket.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			server.removeClient(this);
 		}
-		try {
-			this.socket.close();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		server.removeClient(this);
 	}
 
 	/**
@@ -116,6 +124,7 @@ public class ClientHandler implements Runnable {
 		try {
 			return this.input.readLine();
 		} catch (IOException e) {
+			close();
 			return "Error";
 		}
 	}

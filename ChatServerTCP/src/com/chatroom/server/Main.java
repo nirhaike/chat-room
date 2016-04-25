@@ -14,6 +14,7 @@ public class Main {
 		while (!command.equals("-q")) {
 			command = sc.nextLine();
 		}
+		sc.close();
 		server.close();
 		
 	}

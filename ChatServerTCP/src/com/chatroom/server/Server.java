@@ -36,13 +36,13 @@ public class Server implements Runnable {
 			try {
 				Socket socket = ss.accept();
 				// add the client
-				System.out.println("got client");
 				ClientHandler handler = new ClientHandler(socket, currId++, this);
 				Thread clientThread = new Thread(handler);
 				clientThread.start();
-				System.out.println("started client");
+				clients.add(handler);
+				debug("started client");
 			} catch (IOException e) {
-				System.out.println("Server closed safety");
+				debug("Server closed safety");
 			}
 		}
 	}
@@ -61,10 +61,15 @@ public class Server implements Runnable {
 		// create the message format
 		String finalMsg = sender.getNickname() + "-" + sender.getId() + " (" +
 				Utils.getTime() + ", #" + sender.getNumOfMessages() + "): " + message;
+		debug(finalMsg);
 		// send it to the clients
 		for (ClientHandler client : clients) {
 			client.send(finalMsg);
 		}
+	}
+	
+	public void debug(String str) {
+		System.out.println(str);
 	}
 	
 	public void close() {
