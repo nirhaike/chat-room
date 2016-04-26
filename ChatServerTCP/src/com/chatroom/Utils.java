@@ -15,7 +15,8 @@ public class Utils {
 	 * h = hour
 	 * @return the handShake
 	 */
-	public static String ChangeDateHandShake(String d){
+
+	public static String changeDateHandShake(String d){
 		
 		String[] dateArr = d.split("/");
 		int arr[] = new int[4];
