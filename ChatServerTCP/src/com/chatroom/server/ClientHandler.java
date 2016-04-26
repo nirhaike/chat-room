@@ -97,6 +97,7 @@ public class ClientHandler implements Runnable {
 				System.out.println(">>Sent ack");
 				send(SERVER_RES);
 			} else {
+				// response to the ack of the server
 				System.out.println(">>" + msg);
 			}
 		}
