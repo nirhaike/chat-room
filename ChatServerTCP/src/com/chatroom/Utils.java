@@ -15,59 +15,18 @@ public class Utils {
 	 * h = hour
 	 * @return the handShake
 	 */
-
-	public static String changeDateHandShake(String d){
-		
-		String[] dateArr = d.split("/");
-		int arr[] = new int[4];
-		for (int i = 0; i < dateArr.length; i++) {
-			arr[i] = Integer.parseInt(dateArr[i]);
+	public static String changeDateHandShake(String str){
+		DateFormat format = new SimpleDateFormat("yyyy/MM/dd/HH");
+		Date d;
+		try {
+			d = format.parse(str);
+		} catch (ParseException e) {
+			return "---";
 		}
-		
-		// change hour
-		if (arr[3] == 0){
-			if (arr[2] == 1){
-				if (arr[1] == 1){
-					arr[1] = 12;
-				}
-				else{
-					arr[1]--;
-				}
-				arr[2] = 30;
-			}
-			else{
-				arr[2]--;
-			}
-			arr[3] = 23;
-		}
-		else{
-			arr[3] --;
-		}
-		
-		// change day
-		if (arr[2] == 1){
-			if (arr[1] == 1){
-				arr[1] = 12;
-			}
-			else{
-				arr[1]--;
-			}
-			arr[2] = 30;
-		}
-		else{
-			arr[2]--;
-		}
-	String resultS = "";
-	for (int i = 0; i < arr.length; i++) {
-		resultS += Integer.toString(arr[i]);
-		if (i != arr.length -1){
-			resultS += "/";
-		}
+		Date hourBef = new Date(d.getTime()-1000*60*60);
+		return format.format(hourBef);
 	}
 
-		return resultS;
-		
-	}
 
 	/**
 	 * @return the current date with the format "yyyy/mm/dd/hh"
