@@ -20,35 +20,6 @@ public class Main {
 		// start the client handler
 		Thread t = new Thread(c);
 		t.start();
-		// send the acknowledges
-		while (true) {
-			if (c.isClosed()) {
-				break;
-			}
-			/**
-			if (c.isActive()) {
-				// sleep 5 seconds
-				try {
-					Thread.sleep(5000);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
-				// send acknowledge
-				c.send(Client.CLIENT_ACK);
-				// get the response
-				try {
-					if (!c.recvAck(1000).equals(Client.SERVER_RES)) {
-						c.close();
-						break;
-					}
-				} catch (IOException ioe) {
-					c.close();
-					break;
-				}
-			}
-			*/
-		}
-		System.out.println("Here!");
 	}
 	
 }

@@ -93,6 +93,11 @@ public class ClientHandler implements Runnable {
 			// if it's a chat message
 			if (msg.startsWith("msg: ")) {
 				server.sendMessage(msg.substring(5), this);
+			} else if (msg.equals(CLIENT_ACK)) {
+				System.out.println(">>Sent ack");
+				send(SERVER_RES);
+			} else {
+				System.out.println(">>" + msg);
 			}
 		}
 	}

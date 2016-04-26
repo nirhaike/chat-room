@@ -12,6 +12,8 @@ public class Receiver implements Runnable {
 	private ArrayList<Packet> msgList;
 	
 	public Receiver(Client c) {
+		acksList = new ArrayList<Packet>();
+		msgList = new ArrayList<Packet>();
 		this.client = c;
 	}
 	
@@ -32,24 +34,25 @@ public class Receiver implements Runnable {
 	public synchronized String recvAck(int timeout) throws IOException {
 		long currTime = getTime();
 		while (true) {
-			for (int i = 0; i < acksList.size(); i++) {
-				Packet p = acksList.get(i);
-				msgList.remove(i); // remove the checked packet
-				if (p.timeReceived > currTime) {
-					return p.data;
-				}
-				i--;
-			}
 			// check if the timeout passed
-			if (getTime()-currTime >= timeout)
+			if (getTime()-currTime >= timeout || acksList == null) {
+				System.out.println("Timeout: " + (getTime()-currTime));
 				throw new IOException("Timeout!");
+			}
+			if (acksList.size() > 0) {
+				Packet p = acksList.get(0);
+				return p.data;
+			}
 		}
 	}
 	
 	public void run() {
 		while (client.isActive()) {
 			String data = client.recv();
-			if (data == null || !client.isActive()) {
+			if (data == null) {
+				continue;
+			}
+			if (!client.isActive() || data == Client.CONNECTION_CLOSED) {
 				break;
 			}
 			Packet p = new Packet(getTime(), data);
@@ -89,7 +92,7 @@ public class Receiver implements Runnable {
 	/**
 	 * @return the time in milliseconds
 	 */
-	public long getTime() {
+	public static long getTime() {
 		return Calendar.getInstance().getTimeInMillis();
 	}
 	

@@ -27,6 +27,7 @@ public class Client implements Runnable {
 	private PrintWriter writer;
 	private BufferedReader reader;
 	private Receiver receiver;
+	private Acknowledger acknowledger;
 		
 	private boolean active;
 	private boolean closed;
@@ -81,9 +82,11 @@ public class Client implements Runnable {
 		active = true;
 		// start the receiver
 		receiver = new Receiver(this);
+		acknowledger = new Acknowledger(this);
 		(new Thread(receiver)).start();
+		(new Thread(acknowledger)).start();
 		String msg = sc.nextLine();
-		while (!msg.equals("-q")) {
+		while (!msg.equals("-q") && !isClosed()) {
 			send("msg: " + msg);
 			// get the next message from the client
 			msg = sc.nextLine();
@@ -99,7 +102,6 @@ public class Client implements Runnable {
 	 */
 	public void close() {
 		if (active) {
-			System.out.println("Closingggg" + closed);
 			writer.close();
 			try {
 				reader.close();
@@ -113,7 +115,6 @@ public class Client implements Runnable {
 			}
 			active = false;
 			closed = true;
-			System.out.println(closed);
 		}
 	}
 	
