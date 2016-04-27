@@ -132,8 +132,11 @@ public class ClientHandler implements Runnable {
 			}
 		}
 	}
-
-	public void close() {
+	
+	/**
+	 * closes the connection with the remote client
+	 */
+	public void terminate() {
 		if (this.connected) {
 			this.connected = false;
 			this.out.close();
@@ -148,6 +151,12 @@ public class ClientHandler implements Runnable {
 				e.printStackTrace();
 			}
 			server.removeClient(this);
+		}
+	}
+
+	public void close() {
+		if (this.connected) {
+			terminate();
 			server.broadcast(Utils.getTime() + " " + getNickname() + "-" + getId() + " disconnected");
 		}
 	}

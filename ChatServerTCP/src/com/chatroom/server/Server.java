@@ -78,6 +78,62 @@ public class Server implements Runnable {
 		System.out.println(message);
 	}
 	
+	public synchronized int findClientByName(String clientName) {
+		for (int i = 0; i < clients.size(); i++) {
+			if (clients.get(i).getNickname().equals(clientName)) {
+				return i;
+			}
+		}
+		return -1;
+	}
+	
+	public synchronized int findClientById(int clientId) {
+		for (int i = 0; i < clients.size(); i++) {
+			if (clients.get(i).getId() == clientId) {
+				return i;
+			}
+		}
+		return -1;
+	}
+	
+	public void handleServerCommand(String command) {
+		String[] commandSplitted = command.split(" ");
+		if (commandSplitted.length < 1)
+			return;
+		String commandName = commandSplitted[0];
+		// handle the command "@kick -id userid" or "@kick -name username"
+		if (commandName.equals("kick")) {
+			try {
+				// check if there's enough parameters
+				if (commandSplitted.length < 3)
+					return;
+				int clientNum = -1; // client index in the array
+				int clientId = -1; // client handler's id
+				String clientName = "";
+				if (commandSplitted[1].equals("-name")) { // by name
+					clientName = commandSplitted[2];
+					// get the client id
+					clientNum = findClientByName(clientName);
+				} else { // by id
+					clientId = Integer.parseInt(commandSplitted[2]);
+					clientNum = findClientById(clientId);
+				}
+				// if there's no such name
+				if (clientNum == -1)
+					return;
+				// remove the client
+				ClientHandler client = clients.get(clientNum);
+				// make sure we have the valid name and id
+				clientName = client.getNickname();
+				clientId = client.getId();
+				client.terminate();
+				broadcast(clientName + "-" + clientId + " was kicked by the server");
+			} catch (Exception e) {
+				// can get here if the client disconnected in the middle of the function 
+			}
+		}
+	}
+	
 	public void debug(int id, String str) {
 		// print only if debugging
 		if (DEBUGGING)

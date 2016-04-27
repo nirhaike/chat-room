@@ -12,6 +12,13 @@ public class Main {
 		Scanner sc = new Scanner(System.in);
 		String command = sc.nextLine();
 		while (!command.equals("-q")) {
+			// check if it's a command
+			if (command.startsWith("@")) {
+				server.handleServerCommand(command.substring(1));
+			// print the message otherwise
+			} else {
+				server.broadcast("[SERVER] " + command);
+			}
 			command = sc.nextLine();
 		}
 		sc.close();
