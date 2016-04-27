@@ -5,8 +5,11 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.ArrayList;
 
+import com.chatroom.Packet;
 import com.chatroom.Utils;
+import com.chatroom.client.Receiver;
 
 public class ClientHandler implements Runnable {
 
@@ -22,6 +25,9 @@ public class ClientHandler implements Runnable {
 	private PrintWriter out;
 	private BufferedReader input;
 	
+	private ArrayList<Packet> acksList;
+
+	
 	private String nickname;
 	private int id;
 	private int numOfMessages;
@@ -36,7 +42,20 @@ public class ClientHandler implements Runnable {
 		connected = true;
 		start();
 	}
-	
+	public synchronized String recvAck(int timeout) throws IOException {
+		long currTime = Receiver.getTime();
+		while (true) {
+			// check if the timeout passed
+			if (Receiver.getTime()-currTime >= timeout || acksList == null) {
+				System.out.println("Timeout: " + (Receiver.getTime()-currTime));
+				throw new IOException("Timeout!");
+			}
+			if (acksList.size() > 0) {
+				Packet p = acksList.get(0);
+				return p.getData();
+			}
+		}
+	}
 	public int getId() {
 		return id;
 	}
@@ -99,6 +118,12 @@ public class ClientHandler implements Runnable {
 			} else {
 				// response to the ack of the server
 				System.out.println(">>" + msg);
+				
+				// creates a new packet and adds it to the list
+				// it comes here when the server gets a message of CLIENT_RES
+				Packet p = new Packet(Receiver.getTime(), msg);
+				acksList.add(p);
+
 			}
 		}
 	}

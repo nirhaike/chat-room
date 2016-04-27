@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Calendar;
 
+import com.chatroom.Packet;
+
 public class Receiver implements Runnable {
 	
 	private Client client;
@@ -23,8 +25,8 @@ public class Receiver implements Runnable {
 			for (int i = 0; i < msgList.size(); i++) {
 				Packet p = msgList.get(i);
 				msgList.remove(i); // remove the checked packet
-				if (p.timeReceived > currTime) {
-					return p.data;
+				if (p.getTimeReceived() > currTime) {
+					return p.getData();
 				}
 				i--;
 			}
@@ -41,7 +43,7 @@ public class Receiver implements Runnable {
 			}
 			if (acksList.size() > 0) {
 				Packet p = acksList.get(0);
-				return p.data;
+				return p.getData();
 			}
 		}
 	}
@@ -96,15 +98,6 @@ public class Receiver implements Runnable {
 		return Calendar.getInstance().getTimeInMillis();
 	}
 	
-	private class Packet {
-		long timeReceived;
-		String data;
-		
-		public Packet(long time, String data) {
-			this.timeReceived = time;
-			this.data = data;
-		}
-		
-	}
+
 	
 }
