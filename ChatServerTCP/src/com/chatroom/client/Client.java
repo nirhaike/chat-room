@@ -22,6 +22,8 @@ public class Client implements Runnable {
 	public static final String CLIENT_ACK = "clientcheck";
 	public static final String SERVER_RES = "clientgood";
 	
+	public static final boolean DEBUGGING = false;
+	
 	
 	private Socket s;
 	private PrintWriter writer;
@@ -46,11 +48,11 @@ public class Client implements Runnable {
 		writer.flush();
 	}
 	
-	public synchronized String recvAck(int timeout) throws IOException {
+	public String recvAck(int timeout) throws IOException {
 		return receiver.recvAck(timeout);
 	}
 	
-	public synchronized String recv() {
+	public String recv() {
 		String msg;
 		try {
 			msg = reader.readLine();
@@ -115,6 +117,12 @@ public class Client implements Runnable {
 			}
 			active = false;
 			closed = true;
+		}
+	}
+	
+	public void debug(String msg) {
+		if (DEBUGGING) {
+			System.out.println(msg);
 		}
 	}
 	

@@ -8,11 +8,17 @@ import com.chatroom.client.Receiver;
 public class AcknowledgerServer implements Runnable {
 	
 	private ClientHandler client;
+	
+	public AcknowledgerServer(ClientHandler c) {
+		this.client = c;
+	}
+	
 	public void sleep(long currTime, long waitTime) {
 		while (Receiver.getTime() < currTime + waitTime) {
 			// wait
 		}
 	}
+	
 	public void run() {
 		while (true) {
 			// save the current time

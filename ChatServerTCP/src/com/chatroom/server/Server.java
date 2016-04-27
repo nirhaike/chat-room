@@ -10,10 +10,13 @@ public class Server implements Runnable {
 
 	public static final int PORT = 6655;
 
+	public static final boolean DEBUGGING = false;
+	
 	private ArrayList<ClientHandler> clients;
 	private ServerSocket ss;
 	private boolean running;
 	
+
 	public Server() {
 		clients = new ArrayList<ClientHandler>();
 		ss = null;
@@ -40,14 +43,14 @@ public class Server implements Runnable {
 				Thread clientThread = new Thread(handler);
 				clientThread.start();
 				clients.add(handler);
-				debug("started client");
+				debug(-1, "started client");
 			} catch (IOException e) {
 				break;
 			}
 		}
 	}
 	
-	public void removeClient(ClientHandler client) {
+	public synchronized void removeClient(ClientHandler client) {
 		for (int i = 0; i < clients.size(); i++) {
 			ClientHandler c = clients.get(i);
 			if (client == c) {
@@ -61,15 +64,24 @@ public class Server implements Runnable {
 		// create the message format
 		String finalMsg = sender.getNickname() + "-" + sender.getId() + " (" +
 				Utils.getTime() + ", #" + sender.getNumOfMessages() + "): " + message;
-		debug(finalMsg);
+		debug(-1, finalMsg);
 		// send it to the clients
-		for (ClientHandler client : clients) {
-			client.send(finalMsg);
-		}
+		broadcast(finalMsg);
 	}
 	
-	public void debug(String str) {
-		System.out.println(str);
+	public void broadcast(String message) {
+		// send the message to the clients
+		for (ClientHandler client : clients) {
+			client.send(message);
+		}
+		// print the message to the server
+		System.out.println(message);
+	}
+	
+	public void debug(int id, String str) {
+		// print only if debugging
+		if (DEBUGGING)
+			System.out.println("(" + id + ") "+str);
 	}
 	
 	public synchronized void close() {
@@ -84,7 +96,7 @@ public class Server implements Runnable {
 			client.close();
 			i--;
 		}
-		debug("Server closed safety");
+		debug(-1, "Server closed safety");
 	}
 	
 }

@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
-import java.util.ArrayList;
 
 import com.chatroom.Packet;
 import com.chatroom.Utils;
@@ -25,7 +24,7 @@ public class ClientHandler implements Runnable {
 	private PrintWriter out;
 	private BufferedReader input;
 	
-	private ArrayList<Packet> acksList;
+	private Packet lastAck;
 
 	
 	private String nickname;
@@ -40,18 +39,22 @@ public class ClientHandler implements Runnable {
 		this.socket = s;
 		this.server = serv;
 		connected = true;
+		
+		lastAck = null;
+		
 		start();
 	}
 	public synchronized String recvAck(int timeout) throws IOException {
 		long currTime = Receiver.getTime();
 		while (true) {
 			// check if the timeout passed
-			if (Receiver.getTime()-currTime >= timeout || acksList == null) {
-				System.out.println("Timeout: " + (Receiver.getTime()-currTime));
+			if (Receiver.getTime()-currTime >= timeout || !connected) {
+				server.debug(getId(), Utils.getTime() + " Timeout: " + (Receiver.getTime()-currTime));
 				throw new IOException("Timeout!");
 			}
-			if (acksList.size() > 0) {
-				Packet p = acksList.get(0);
+			if (lastAck != null) {
+				Packet p = lastAck;
+				lastAck = null;
 				return p.getData();
 			}
 		}
@@ -98,38 +101,39 @@ public class ClientHandler implements Runnable {
 	public void run() {
 		// do the handshake
 		connected = connected && handShake();
-		server.debug("Done handshake with " + connected + " result.");
 		// get nickname
 		nickname = receive();
-		server.debug("Got nickname " + nickname);
-		// TODO ~start acknowledges here!~
+		server.debug(getId(), "Got nickname " + nickname);
+		(new Thread(new AcknowledgerServer(this))).start();
+		server.broadcast(Utils.getTime() + " " + getNickname() + "-" + getId() + " connected, welcome!");
 		while (connected) {
 			String msg = receive();
-			if (msg == null || !connected) { // if disconnected
-				connected = false;
+			server.debug(getId(), "GOTTTTT:" + msg);
+			if (msg == null || !connected || msg == "Error") { // if disconnected
+				if (connected)
+					close();
 				break;
 			}
 			// if it's a chat message
 			if (msg.startsWith("msg: ")) {
+				numOfMessages++;
 				server.sendMessage(msg.substring(5), this);
 			} else if (msg.equals(CLIENT_ACK)) {
-				System.out.println(">>Sent ack");
+				server.debug(getId(), Utils.getTime() + " Got client ack, responded!");
 				send(SERVER_RES);
-			} else {
-				// response to the ack of the server
-				System.out.println(">>" + msg);
-				
+			} else if (msg.equals(CLIENT_RES)) {
+				// client's response to the ack of the server
+				server.debug(getId(), Utils.getTime() + " Got client response!" + msg);
 				// creates a new packet and adds it to the list
 				// it comes here when the server gets a message of CLIENT_RES
 				Packet p = new Packet(Receiver.getTime(), msg);
-				acksList.add(p);
+				lastAck = p;
 
 			}
 		}
 	}
 
 	public void close() {
-		System.out.println("Closing!");
 		if (this.connected) {
 			this.connected = false;
 			this.out.close();
@@ -144,6 +148,7 @@ public class ClientHandler implements Runnable {
 				e.printStackTrace();
 			}
 			server.removeClient(this);
+			server.broadcast(Utils.getTime() + " " + getNickname() + "-" + getId() + " disconnected");
 		}
 	}
 
@@ -151,7 +156,7 @@ public class ClientHandler implements Runnable {
 	 * @pre data != null
 	 * @post $ret: whether the message was sent
 	 */
-	public synchronized String receive() {
+	public String receive() {
 		try {
 			return this.input.readLine();
 		} catch (IOException e) {
@@ -160,7 +165,7 @@ public class ClientHandler implements Runnable {
 		}
 	}
 
-	public synchronized boolean send(String data) {
+	public boolean send(String data) {
 		try {
 			this.out.println(data);
 			out.flush();

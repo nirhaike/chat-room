@@ -1,48 +1,34 @@
 package com.chatroom.client;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Calendar;
 
 import com.chatroom.Packet;
+import com.chatroom.Utils;
 
 public class Receiver implements Runnable {
 	
 	private Client client;
 	
-	private ArrayList<Packet> acksList;
-	private ArrayList<Packet> msgList;
+	private Packet lastAck;
 	
 	public Receiver(Client c) {
-		acksList = new ArrayList<Packet>();
-		msgList = new ArrayList<Packet>();
+		lastAck = null;
 		this.client = c;
 	}
+
 	
-	public synchronized String recvMsg() {
-		long currTime = getTime();
-		while (true) {
-			for (int i = 0; i < msgList.size(); i++) {
-				Packet p = msgList.get(i);
-				msgList.remove(i); // remove the checked packet
-				if (p.getTimeReceived() > currTime) {
-					return p.getData();
-				}
-				i--;
-			}
-		}
-	}
-	
-	public synchronized String recvAck(int timeout) throws IOException {
+	public String recvAck(int timeout) throws IOException {
 		long currTime = getTime();
 		while (true) {
 			// check if the timeout passed
-			if (getTime()-currTime >= timeout || acksList == null) {
-				System.out.println("Timeout: " + (getTime()-currTime));
+			if (getTime()-currTime >= timeout) {
+				client.debug(Utils.getTime() + " Timeout: " + (getTime()-currTime));
 				throw new IOException("Timeout!");
 			}
-			if (acksList.size() > 0) {
-				Packet p = acksList.get(0);
+			if (lastAck != null) {
+				Packet p = lastAck;
+				lastAck = null;
 				return p.getData();
 			}
 		}
@@ -51,8 +37,9 @@ public class Receiver implements Runnable {
 	public void run() {
 		while (client.isActive()) {
 			String data = client.recv();
+			client.debug(Utils.getTime() + " got packet: " + data);
 			if (data == null) {
-				continue;
+				break;
 			}
 			if (!client.isActive() || data == Client.CONNECTION_CLOSED) {
 				break;
@@ -60,16 +47,17 @@ public class Receiver implements Runnable {
 			Packet p = new Packet(getTime(), data);
 			// if the server responded an acknowledge
 			if (isAcknowledgeResponse(data)) {
-				acksList.add(p);
+				client.debug(Utils.getTime() + " Got server response!");
+				lastAck = p;
 			}
-			// if the server sended an acknowledge
+			// if the server sent an acknowledge
 			else if (isAcknowledgeRequest(data)) {
 				// send a response
+				client.debug(Utils.getTime() + " Responded!");
 				client.send(Client.CLIENT_RES);
 			}
 			// a message packet
 			else {
-				//msgList.add(p);
 				System.out.println(data);
 			}
 		}

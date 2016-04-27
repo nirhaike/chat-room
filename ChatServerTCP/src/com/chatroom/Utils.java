@@ -43,7 +43,7 @@ public class Utils {
 	 */
 	public static String getTime() {
 		Calendar cal = Calendar.getInstance();
-		DateFormat df = new SimpleDateFormat("HH:mm:ss");
+		DateFormat df = new SimpleDateFormat("HH:mm:ss.SSS");
 		Date d = cal.getTime();
 		return df.format(d);
 	}
