@@ -10,6 +10,7 @@ public class Main {
 		// run the server
 		serverThread.start();
 		Scanner sc = new Scanner(System.in);
+		System.out.println("Type '@help' for more information");
 		String command = sc.nextLine();
 		while (!command.equals("-q")) {
 			// check if it's a command

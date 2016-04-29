@@ -131,6 +131,18 @@ public class Server implements Runnable {
 			} catch (Exception e) {
 				// can get here if the client disconnected in the middle of the function 
 			}
+		} else if (commandName.equals("help")) {
+			System.out.println("----------------------------------------------");
+			if (commandSplitted.length < 2) {
+				System.out.println("Server commands:\n");
+				System.out.println("* '@kick -name username' - kick by name");
+				System.out.println("* '@kick -id userId' - kick by id");
+				System.out.println("\ntype '@help commandName' for more information.");
+			} else if (commandSplitted[1].equals("kick")) {
+				System.out.println("* '@kick -name username' - kick a user by his \n  nickname. Example: '@kick -name Nir'");
+				System.out.println("* '@kick -id userId' - kick a user by his \n  user ID. Example: '@kick -id 7'");
+			}
+			System.out.println("----------------------------------------------");
 		}
 	}
 	
