@@ -5,6 +5,9 @@ import java.io.IOException;
 public class Main {
 	
 	public static void main(String[] args) {
+		if (args.length < 2) {
+			System.out.println("Run with the arguments:\njava (-jar) <filename> <ip> <port>");
+		}
 		// parse the arguments
 		String ip = args[0];
 		int port = Integer.parseInt(args[1]);
