@@ -18,15 +18,14 @@ public class ClientHandler implements Runnable {
 	public static final String SERVER_RES = "clientgood";
 
 	private Server server;
-	
+
 	private Socket socket;
 	private boolean connected;
 	private PrintWriter out;
 	private BufferedReader input;
-	
+
 	private Packet lastAck;
 
-	
 	private String nickname;
 	private int id;
 	private int numOfMessages;
@@ -35,21 +34,23 @@ public class ClientHandler implements Runnable {
 		this.id = id;
 		this.nickname = "";
 		this.numOfMessages = 0;
-		
+
 		this.socket = s;
 		this.server = serv;
 		connected = true;
-		
+
 		lastAck = null;
-		
+
 		start();
 	}
+
 	public synchronized String recvAck(int timeout) throws IOException {
 		long currTime = Receiver.getTime();
 		while (true) {
 			// check if the timeout passed
-			if (Receiver.getTime()-currTime >= timeout || !connected) {
-				server.debug(getId(), Utils.getTime() + " Timeout: " + (Receiver.getTime()-currTime));
+			if (Receiver.getTime() - currTime >= timeout || !connected) {
+				server.debug(getId(), Utils.getTime() + " Timeout: "
+						+ (Receiver.getTime() - currTime));
 				throw new IOException("Timeout!");
 			}
 			if (lastAck != null) {
@@ -59,14 +60,15 @@ public class ClientHandler implements Runnable {
 			}
 		}
 	}
+
 	public int getId() {
 		return id;
 	}
-	
+
 	public int getNumOfMessages() {
 		return numOfMessages;
 	}
-	
+
 	public String getNickname() {
 		return nickname;
 	}
@@ -105,11 +107,13 @@ public class ClientHandler implements Runnable {
 		nickname = receive();
 		server.debug(getId(), "Got nickname " + nickname);
 		(new Thread(new AcknowledgerServer(this))).start();
-		server.broadcast(Utils.getTime() + " " + getNickname() + "-" + getId() + " connected, welcome!");
+		server.broadcast(Utils.getTime() + " " + getNickname() + "-" + getId()
+				+ " connected, welcome!");
 		while (connected) {
 			String msg = receive();
 			server.debug(getId(), "GOTTTTT:" + msg);
-			if (msg == null || !connected || msg == "Error") { // if disconnected
+			if (msg == null || !connected || msg == "Error") { // if
+																// disconnected
 				if (connected)
 					close();
 				break;
@@ -119,11 +123,13 @@ public class ClientHandler implements Runnable {
 				numOfMessages++;
 				server.sendMessage(msg.substring(5), this);
 			} else if (msg.equals(CLIENT_ACK)) {
-				server.debug(getId(), Utils.getTime() + " Got client ack, responded!");
+				server.debug(getId(), Utils.getTime()
+						+ " Got client ack, responded!");
 				send(SERVER_RES);
 			} else if (msg.equals(CLIENT_RES)) {
 				// client's response to the ack of the server
-				server.debug(getId(), Utils.getTime() + " Got client response!" + msg);
+				server.debug(getId(), Utils.getTime() + " Got client response!"
+						+ msg);
 				// creates a new packet and adds it to the list
 				// it comes here when the server gets a message of CLIENT_RES
 				Packet p = new Packet(Receiver.getTime(), msg);
@@ -132,7 +138,7 @@ public class ClientHandler implements Runnable {
 			}
 		}
 	}
-	
+
 	/**
 	 * closes the connection with the remote client
 	 */
@@ -157,7 +163,8 @@ public class ClientHandler implements Runnable {
 	public void close() {
 		if (this.connected) {
 			terminate();
-			server.broadcast(Utils.getTime() + " " + getNickname() + "-" + getId() + " disconnected");
+			server.broadcast(Utils.getTime() + " " + getNickname() + "-"
+					+ getId() + " disconnected");
 		}
 	}
 
