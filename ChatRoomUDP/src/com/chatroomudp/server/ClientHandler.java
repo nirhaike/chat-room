@@ -54,9 +54,7 @@ public class ClientHandler implements Runnable {
 		// get nickname
 		nickname = receive();
 		server.debug(getId(), "Got nickname " + nickname);
-		// (new Thread(new AcknowledgerServer(this))).start();
-		// ------------------------------------------
-		// ********************************
+		 (new Thread(new AcknowledgerServer(this))).start();
 		server.broadcast(Utils.getTime() + " " + getNickname() + "-" + getId()
 				+ " connected, welcome!");
 		while (connected) {

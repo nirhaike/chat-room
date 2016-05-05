@@ -14,7 +14,11 @@ public class Client implements Runnable {
 	// server fields
 	private String ip;
 	private int port;
+	public static final String SERVER_ACK = "servercheck";
+	public static final String CLIENT_RES = "servergood";
 	
+	public static final String CLIENT_ACK = "clientcheck";
+	public static final String SERVER_RES = "clientgood";
 	// client fields
 	private String nickname;
 	
