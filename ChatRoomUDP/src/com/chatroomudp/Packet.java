@@ -11,7 +11,11 @@ public class Packet {
 		this.setTimeReceived(time);
 		this.setData(data);
 	}
-
+	public Packet(long time, String data) {
+		this.setId(0);
+		this.setTimeReceived(time);
+		this.setData(data);
+	}
 	public int getId() {
 		return id;
 	}
