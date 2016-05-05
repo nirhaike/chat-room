@@ -1,16 +1,28 @@
 package com.chatroomudp.server;
 
 import java.io.IOException;
+import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 
 import com.chatroomudp.Packet;
 
 public class ClientHandler implements Runnable {
+	public static final String SERVER_ACK = "servercheck";
+	public static final String CLIENT_RES = "servergood";
+	public static final String CLIENT_ACK = "clientcheck";
+	public static final String SERVER_RES = "clientgood";
+	private DatagramPacket client;
+	private String nickname;
+	private int id;
+	private int numOfMessages;
+	private Server server;
 
-	private DatagramSocket client;
-	
-	public ClientHandler(DatagramSocket client) {
+	public ClientHandler(DatagramPacket client,int id, Server s) {
 		this.client = client;
+		this.id = id;
+		this.numOfMessages = 0;
+		this.server = s;
+
 	}
 	
 	/**
@@ -23,7 +35,17 @@ public class ClientHandler implements Runnable {
 	public void run() {
 		// TODO
 	}
+	public int getId() {
+		return id;
+	}
 	
+	public int getNumOfMessages() {
+		return numOfMessages;
+	}
+	
+	public String getNickname() {
+		return nickname;
+	}
 	/**
 	 * sends 'msg' to the client sides
 	 * @param msg the message to send
