@@ -103,12 +103,17 @@ public class ClientHandler implements Runnable {
 	public void run() {
 		// do the handshake
 		connected = connected && handShake();
-		// get nickname
-		nickname = receive();
-		server.debug(getId(), "Got nickname " + nickname);
-		(new Thread(new AcknowledgerServer(this))).start();
-		server.broadcast(Utils.getTime() + " " + getNickname() + "-" + getId()
-				+ " connected, welcome!");
+		if (connected) {
+			// get nickname
+			nickname = receive();
+			server.debug(getId(), "Got nickname " + nickname);
+			(new Thread(new AcknowledgerServer(this))).start();
+			server.broadcast(Utils.getTime() + " " + getNickname() + "-" + getId()
+					+ " connected, welcome!");
+			// send current chat members
+			String names = server.getCurrentChatMembersString(this);
+			send(names);
+		}
 		while (connected) {
 			String msg = receive();
 			server.debug(getId(), "GOTTTTT:" + msg);

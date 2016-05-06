@@ -12,7 +12,7 @@ public class Main {
 		Scanner sc = new Scanner(System.in);
 		System.out.println("Type '@help' for more information");
 		String command = sc.nextLine();
-		while (!command.equals("-q")) {
+		while (!command.equals("-q") && server.isRunning()) {
 			// check if it's a command
 			if (command.startsWith("@")) {
 				server.handleServerCommand(command.substring(1));

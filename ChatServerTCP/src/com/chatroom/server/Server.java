@@ -12,12 +12,14 @@ public class Server implements Runnable {
 
 	public static final boolean DEBUGGING = false;
 	
+	private TerminatingService terminateService;
 	private ArrayList<ClientHandler> clients;
 	private ServerSocket ss;
 	private boolean running;
-	
 
 	public Server() {
+		terminateService = new TerminatingService(this);
+		(new Thread(terminateService)).start();
 		clients = new ArrayList<ClientHandler>();
 		ss = null;
 		running = false;
@@ -33,11 +35,15 @@ public class Server implements Runnable {
 			System.out.println("Can't listen on port " + PORT);
 		}
 		// the current client id
-		int currId = 0; 
+		int currId = 0;
+		// start terminating (there's no client right now) 
+		terminateService.startTerminating();
 		// run
 		while (running) {
 			try {
 				Socket socket = ss.accept();
+				// stop terminating
+				terminateService.stopTerminating();
 				// add the client
 				ClientHandler handler = new ClientHandler(socket, currId++, this);
 				Thread clientThread = new Thread(handler);
@@ -51,6 +57,7 @@ public class Server implements Runnable {
 	}
 	
 	public synchronized void removeClient(ClientHandler client) {
+		// remove the client
 		for (int i = 0; i < clients.size(); i++) {
 			ClientHandler c = clients.get(i);
 			if (client == c) {
@@ -58,9 +65,16 @@ public class Server implements Runnable {
 				return;
 			}
 		}
+		// start terminating if there's no client
+		if (clients.size() == 0) { 
+			terminateService.startTerminating();
+		}
 	}
 	
 	public void sendMessage(String message, ClientHandler sender) {
+		// don't send if not running
+		if (!running)
+			return;
 		// create the message format
 		String finalMsg = sender.getNickname() + "-" + sender.getId() + " (" +
 				Utils.getTime() + ", #" + sender.getNumOfMessages() + "): " + message;
@@ -70,12 +84,37 @@ public class Server implements Runnable {
 	}
 	
 	public void broadcast(String message) {
+		// don't send if not running
+		if (!running)
+			return;
 		// send the message to the clients
 		for (ClientHandler client : clients) {
 			client.send(message);
 		}
 		// print the message to the server
 		System.out.println(message);
+	}
+	
+	public synchronized String[] getCurrentChatNames() {
+		String[] members = new String[clients.size()];
+		for (int i = 0; i < members.length; i++) {
+			members[i] = clients.get(i).getNickname();
+		}
+		return members;
+	}
+	
+	public String getCurrentChatMembersString(ClientHandler handler) {
+		String s = Utils.getTime() + " The chat members:";
+		for (int i = 0; i < clients.size(); i++) {
+			ClientHandler curr = clients.get(i);
+			// if the client is 'handler'
+			String youString = "";
+			if (curr == handler) {
+				youString = " (you)";
+			}
+			s += "\n * " + curr.getNickname() + "-" + curr.getId() + youString;
+		}
+		return s;
 	}
 	
 	public synchronized int findClientByName(String clientName) {
@@ -164,7 +203,12 @@ public class Server implements Runnable {
 			client.close();
 			i--;
 		}
+		terminateService.close();
 		debug(-1, "Server closed safety");
+	}
+	
+	public boolean isRunning() {
+		return running;
 	}
 	
 }

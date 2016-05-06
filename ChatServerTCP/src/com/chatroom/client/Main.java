@@ -5,8 +5,10 @@ import java.io.IOException;
 public class Main {
 	
 	public static void main(String[] args) {
+		// arguments validity check
 		if (args.length < 2) {
 			System.out.println("Run with the arguments:\njava (-jar) <filename> <ip> <port>");
+			System.exit(1);
 		}
 		// parse the arguments
 		String ip = args[0];
