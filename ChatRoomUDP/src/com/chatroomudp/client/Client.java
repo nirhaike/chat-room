@@ -139,6 +139,7 @@ public class Client implements Runnable {
 	 */
 	public void send(String message) {
 		byte[] sendData = new byte[1024];
+		sendData = message.getBytes();
 		DatagramPacket sendPacket = new DatagramPacket(sendData,
 				sendData.length, IPAddress, port);
 		try {
