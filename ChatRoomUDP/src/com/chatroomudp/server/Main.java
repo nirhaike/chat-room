@@ -6,12 +6,19 @@ public class Main {
 
 	public static void main(String[] args) {
 		// create the server
-		Server server = new Server();
+		Scanner sc = null;
+		Server server = null;
+		try{
+		server = new Server();
 		Thread serverThread = new Thread(server);
 		// run the server
 		serverThread.start();
 		// handle server commands (until -q)
-		Scanner sc = new Scanner(System.in);
+		sc = new Scanner(System.in);
+		}
+		catch(Exception e){
+			System.out.println("error");
+		}
 		String command = sc.nextLine();
 		while (!command.equals("-q")) {
 			command = sc.nextLine();

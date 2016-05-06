@@ -35,10 +35,10 @@ public class ClientHandler implements Runnable {
 		port = client.getPort();
 		connected = true;
 		try {
-			serverSocket = new DatagramSocket(port);
+			serverSocket = new DatagramSocket();
 		} catch (SocketException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			System.out.println("errror");
 		}
 
 	}
