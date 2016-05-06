@@ -25,8 +25,9 @@ public class ClientHandler implements Runnable {
 	private boolean connected;
 	private Packet lastAck;
 	DatagramSocket serverSocket = null;
+	private Recieve r;
 
-	public ClientHandler(DatagramPacket client, int id, Server s) {
+	public ClientHandler(DatagramPacket client, int id, Server s,Recieve r) {
 		this.client = client;
 		this.id = id;
 		this.numOfMessages = 0;
@@ -34,6 +35,7 @@ public class ClientHandler implements Runnable {
 		IPAddress = client.getAddress();
 		port = client.getPort();
 		connected = true;
+		this.r = r;
 		try {
 			serverSocket = new DatagramSocket();
 		} catch (SocketException e) {
@@ -53,12 +55,18 @@ public class ClientHandler implements Runnable {
 		connected = connected && handShake();
 		// get nickname
 		nickname = receive();
+		while(nickname == null){
+			nickname = receive();
+		}
 		server.debug(getId(), "Got nickname " + nickname);
 		 (new Thread(new AcknowledgerServer(this))).start();
 		server.broadcast(Utils.getTime() + " " + getNickname() + "-" + getId()
 				+ " connected, welcome!");
 		while (connected) {
 			String msg = receive();
+			while (msg == null){
+				msg = receive();
+			}
 			server.debug(getId(), "GOTTTTT:" + msg);
 			if (msg == null || !connected || msg == "Error") { // if
 																// disconnected
@@ -204,6 +212,6 @@ public class ClientHandler implements Runnable {
 	}
 
 	public String receive() {
-		return ByteArr(client.getData());
+		return r.recv(IPAddress, port);
 	}
 }

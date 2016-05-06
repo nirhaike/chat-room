@@ -13,8 +13,8 @@ import com.chatroomudp.server.ClientHandler;
 
 
 public class Server implements Runnable {
-	public static final int PORT = 6657;
-	public static final boolean DEBUGGING = false;
+	public static final int PORT = 6658;
+	public static final boolean DEBUGGING = true;
 
 	private ArrayList<ClientHandler> clients;
 	private DatagramSocket ss;
@@ -41,18 +41,22 @@ public class Server implements Runnable {
 		}
 		int currId = 0; 
 		byte[] receiveData = new byte[1024];
+		Recieve r = new Recieve(ss);
+		DatagramPacket receivePacket = null;
+		Thread clientR = new Thread(r);
+		clientR.start();
 		while (running) {
 			try{
+			receivePacket = r.recv("connect");
+			if( receivePacket != null){
+				ClientHandler handler = new ClientHandler(receivePacket, currId++, this,r);
+				Thread clientThread = new Thread(handler);
+				clientThread.start();
+				clients.add(handler);
+				debug(-1, "started client");
+			}
 
-			DatagramPacket receivePacket = new DatagramPacket(receiveData,
-					receiveData.length);
-			ss.receive(receivePacket);
 
-			ClientHandler handler = new ClientHandler(receivePacket, currId++, this);
-			Thread clientThread = new Thread(handler);
-			clientThread.start();
-			clients.add(handler);
-			debug(-1, "started client");
 			}
 			catch(Exception e){
 				System.out.println("errror");

@@ -55,7 +55,7 @@ public class Client implements Runnable {
 		this.port = port;
 		active = false;
 		try {
-			this.IPAddress = InetAddress.getByName(String.valueOf(port));
+			this.IPAddress = InetAddress.getByName(addr);
 		} catch (UnknownHostException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
@@ -106,6 +106,7 @@ public class Client implements Runnable {
 		// ask for a nickname
 		System.out.print("Please enter your nickname: ");
 		nickname = sc.nextLine();
+		send("connect");
 		// handle the handshake
 		String handshake = "";
 		handshake = recv();
