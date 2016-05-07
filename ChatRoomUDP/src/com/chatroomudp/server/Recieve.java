@@ -84,6 +84,10 @@ public class Recieve implements Runnable {
 			}
 			boolean b = false;
 			try {
+				if (d==null){
+					System.out.println(list.get(i) == null);
+					return null;
+				}
 				b = (d.getAddress().equals(IPAddress) && d.getPort() == port);
 			} catch (Exception e) {
 				e.printStackTrace();

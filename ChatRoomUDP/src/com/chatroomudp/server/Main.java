@@ -17,7 +17,7 @@ public class Main {
 		sc = new Scanner(System.in);
 		}
 		catch(Exception e){
-			System.out.println("error");
+			System.out.println("error main");
 		}
 		String command = sc.nextLine();
 		while (!command.equals("-q")) {
