@@ -46,7 +46,7 @@ public class Recieve implements Runnable {
 				list.add(receivePacket);
 			} catch (IOException e) {
 				e.printStackTrace();
-				System.out.println("i: " + " len: " + " ");
+				System.out.println("i: " + " len: " + " " + "run");
 			}
 		}
 
@@ -55,16 +55,23 @@ public class Recieve implements Runnable {
 	public synchronized DatagramPacket recv(String msg) {
 		DatagramPacket d = null;
 		boolean b = false;
+		DatagramPacket d1= null;
+
 		for (int i = 0; i < list.size(); i++) {
 			try {
-				b = ByteArr(list.get(i).getData()).equals(msg);
+				d1 = list.get(i);
+				if (d1== null){
+					System.out.println("d ==null in revc");
+					System.out.println(list.get(i) == null);
+					return null;
+				}
+				b = ByteArr(d1.getData()).equals(msg);
 			} catch (Exception e) {
 				e.printStackTrace();
 				System.out.println("i: " + i + " len: " + list.size() + " ");
 			}
 			if (b) {
 				d = list.get(i);
-				;
 				list.remove(i);
 				return d;
 			}
@@ -76,15 +83,11 @@ public class Recieve implements Runnable {
 		String s = null;
 		DatagramPacket d = null;
 		for (int i = 0; i < list.size(); i++) {
-			try {
 				d = list.get(i);
-			} catch (Exception e) {
-				e.printStackTrace();
-				System.out.println("i: " + i + " len: " + list.size() + " ");
-			}
 			boolean b = false;
 			try {
 				if (d==null){
+					System.out.println("d == null");
 					System.out.println(list.get(i) == null);
 					return null;
 				}
