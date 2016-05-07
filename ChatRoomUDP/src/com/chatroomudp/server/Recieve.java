@@ -62,14 +62,37 @@ public class Recieve implements Runnable {
 		return d;
 	}
 	public String recv(InetAddress IPAddress, int port){
-		String s;
+		String s = null;
+		DatagramPacket d = null;
 		for (int i = 0; i < list.size(); i++) {
-			if ((list.get(i).getAddress().equals(IPAddress) && list.get(i).getPort() == port)){
+			d= list.get(i);
+			boolean b = false;
+			try{
+			b = (d.getAddress().equals(IPAddress) && d.getPort() == port);
+			}
+			catch(Exception e){
+				System.out.println("i: "+ i + " len: " + list.size() + e.toString() + " " );
+			}
+			if (b){
+			
+			
+				try{
 				s = ByteArr(list.get(i).getData());
-				list.remove(i);
+				}
+				catch(Exception e){
+					System.out.println("i: "+ i + " len: " + list.size() + e.toString() + " " );
+				}
+				try{
+				list.remove(i);}
+				catch(Exception e){
+					System.out.println("i: "+ i + " len: " + list.size() + e.toString() + " " );
+				}
+				
 				return s;
 				
 			}
+
+
 		}
 		return null;
 	}

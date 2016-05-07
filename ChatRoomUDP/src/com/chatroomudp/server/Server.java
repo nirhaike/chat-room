@@ -13,8 +13,8 @@ import com.chatroomudp.server.ClientHandler;
 
 
 public class Server implements Runnable {
-	public static final int PORT = 6658;
-	public static final boolean DEBUGGING = true;
+	public static final int PORT = 6656;
+	public static final boolean DEBUGGING = false;
 
 	private ArrayList<ClientHandler> clients;
 	private DatagramSocket ss;
@@ -59,7 +59,7 @@ public class Server implements Runnable {
 
 			}
 			catch(Exception e){
-				System.out.println("errror");
+				System.out.println(e.toString());
 			}
 		}
 		

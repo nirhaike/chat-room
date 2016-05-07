@@ -68,10 +68,12 @@ public class ClientHandler implements Runnable {
 				msg = receive();
 			}
 			server.debug(getId(), "GOTTTTT:" + msg);
-			if (msg == null || !connected || msg == "Error") { // if
-																// disconnected
+			
+			if (msg == null || !connected || msg == "Error") { // if											// disconnected
 				if (connected)
-					close();
+				{
+					
+					close();}
 				break;
 			}
 			// if it's a chat message
@@ -204,8 +206,13 @@ public class ClientHandler implements Runnable {
 		/** do the hand shake **/
 		String dateSent = Utils.getDate();
 		send(dateSent);
-		if (!receive().equals(Utils.changeDateHandShake(dateSent))) {
+		String s = receive();
+		while(s == null){
+			s = receive();
+		}
+		if (!s.equals(Utils.changeDateHandShake(dateSent))) {
 			close();
+			System.out.println("fffffffffffffffffffffffffff");
 			return false;
 		}
 		return true;
