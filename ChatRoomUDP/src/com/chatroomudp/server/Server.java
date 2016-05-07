@@ -93,6 +93,7 @@ public class Server implements Runnable {
 	 * @post all the server functionality won't work
 	 */
 	public synchronized void close() {
+		System.out.println("here");
 		running = false;
 		ss.close();
 		for (int i = 0; i < clients.size(); i++) {
