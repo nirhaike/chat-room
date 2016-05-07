@@ -50,7 +50,7 @@ public class Recieve implements Runnable {
 		
 		
 	}
-	public DatagramPacket recv(String msg){
+	public synchronized DatagramPacket recv(String msg){
 		DatagramPacket d = null;
 		for (int i = 0; i < list.size(); i++) {
 			if (ByteArr(list.get(i).getData()).equals(msg)){
@@ -61,11 +61,15 @@ public class Recieve implements Runnable {
 		}
 		return d;
 	}
-	public String recv(InetAddress IPAddress, int port){
+	public  synchronized String recv(InetAddress IPAddress, int port){
 		String s = null;
 		DatagramPacket d = null;
 		for (int i = 0; i < list.size(); i++) {
-			d= list.get(i);
+			try{
+			d= list.get(i);}
+			catch(Exception e){
+				System.out.println("i: "+ i + " len: " + list.size() + e.toString() + " " );
+			}
 			boolean b = false;
 			try{
 			b = (d.getAddress().equals(IPAddress) && d.getPort() == port);

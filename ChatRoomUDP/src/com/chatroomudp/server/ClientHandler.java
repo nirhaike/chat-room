@@ -72,7 +72,7 @@ public class ClientHandler implements Runnable {
 			if (msg == null || !connected || msg == "Error") { // if											// disconnected
 				if (connected)
 				{
-					
+					System.out.println("come to close");
 					close();}
 				break;
 			}
@@ -211,8 +211,9 @@ public class ClientHandler implements Runnable {
 			s = receive();
 		}
 		if (!s.equals(Utils.changeDateHandShake(dateSent))) {
-			close();
 			System.out.println("fffffffffffffffffffffffffff");
+
+			close();
 			return false;
 		}
 		return true;
