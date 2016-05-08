@@ -47,5 +47,26 @@ public class Utils {
 		Date d = cal.getTime();
 		return df.format(d);
 	}
+	/**
+	 * tries to parse the string to an integer
+	 * @param str any string
+	 * @return integer represents 'str'
+	 */
+	public static Integer tryParse(String str) {
+		  int value;
+		  try {
+			  value = Integer.parseInt(str);
+		  } catch (NumberFormatException nfe) {
+			  value = -1;
+		  }
+		  return value;
+	}
+	
+	public static int getPacketId(String str) {
+		if (str.contains(",")) {
+			return Utils.tryParse(str.substring(0, str.indexOf(",")));
+		}
+		return -1;
+	}
 
 }

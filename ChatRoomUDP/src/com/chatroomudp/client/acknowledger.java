@@ -5,11 +5,11 @@ import java.io.IOException;
 import com.chatroomudp.client.Client;
 import com.chatroomudp.client.Receiver;
 
-public class acknowledger implements Runnable {
+public class Acknowledger implements Runnable {
 
 	private Client client;
 	
-	public acknowledger(Client c) {
+	public Acknowledger(Client c) {
 		this.client = c;
 	}
 	

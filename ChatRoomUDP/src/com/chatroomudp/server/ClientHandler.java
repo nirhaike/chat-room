@@ -5,6 +5,7 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
+import java.util.ArrayList;
 
 import com.chatroom.Utils;
 import com.chatroomudp.client.Receiver;
@@ -12,23 +13,32 @@ import com.chatroomudp.client.Receiver;
 import com.chatroomudp.Packet;
 
 public class ClientHandler implements Runnable {
+	// constants
 	public static final String SERVER_ACK = "servercheck";
 	public static final String CLIENT_RES = "servergood";
 	public static final String CLIENT_ACK = "clientcheck";
 	public static final String SERVER_RES = "clientgood";
-	private DatagramPacket client;
+	
+	// save 100 last sent packets
+	private ArrayList<Packet> packetsHistory;
+	// last received packet id (to check if there's any missing message)
+	private int totalReceivedPackets;
+	private int totalSentPackets;
+	
 	private String nickname;
 	private int id, port;
 	private int numOfMessages;
+	
 	private Server server;
 	private InetAddress IPAddress;
 	private boolean connected;
+	
 	private Packet lastAck;
 	DatagramSocket serverSocket = null;
 	private Recieve r;
 
 	public ClientHandler(DatagramPacket client, int id, Server s,Recieve r) {
-		this.client = client;
+		// initialization
 		this.id = id;
 		this.numOfMessages = 0;
 		this.server = s;
@@ -39,9 +49,10 @@ public class ClientHandler implements Runnable {
 		try {
 			serverSocket = new DatagramSocket();
 		} catch (SocketException e) {
-			// TODO Auto-generated catch block
 			System.out.println("errror");
 		}
+		// init the packets history
+		packetsHistory = new ArrayList<Packet>();
 
 	}
 
@@ -67,7 +78,7 @@ public class ClientHandler implements Runnable {
 			while (msg == null){
 				msg = receive();
 			}
-			server.debug(getId(), "GOTTTTT:" + msg);
+			server.debug(getId(), "GOT:" + msg);
 			
 			if (msg == null || !connected || msg == "Error") { // if											// disconnected
 				if (connected)
@@ -140,8 +151,8 @@ public class ClientHandler implements Runnable {
 				sendData.length, IPAddress, port);
 		try {
 			serverSocket.send(sendPacket);
+			totalSentPackets++;
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			System.out.println("error send");
 		}
@@ -168,6 +179,7 @@ public class ClientHandler implements Runnable {
 	public synchronized void close() {
 			if (this.connected) {
 				this.connected = false;
+				packetsHistory = null;
 				server.broadcast(Utils.getTime() + " " + getNickname() + "-"
 						+ getId() + " disconnected");
 				server.removeClient(this);
@@ -212,15 +224,29 @@ public class ClientHandler implements Runnable {
 			s = receive();
 		}
 		if (!s.equals(Utils.changeDateHandShake(dateSent))) {
-			System.out.println("fffffffffffffffffffffffffff");
-
+			System.out.println("false handshake");
 			close();
 			return false;
 		}
 		return true;
 	}
 
+	
 	public String receive() {
-		return r.recv(IPAddress, port);
+		String str = r.recv(IPAddress, port);
+		/*
+		totalReceivedPackets++;
+		int packId = Utils.getPacketId(str);
+		// problem (packet not numbered / problematic number)
+		if (packId < totalReceivedPackets) {
+			close();
+			return "";
+		}
+		if (packId > totalReceivedPackets) {
+			// ask for the packets between totalReceivedPackets and packId
+			send("askpacket " + totalReceivedPackets);
+			return "";
+		}*/
+		return str;
 	}
 }

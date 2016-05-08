@@ -10,18 +10,14 @@ import java.util.Scanner;
 
 import com.chatroom.Utils;
 import com.chatroomudp.client.Receiver;
-import com.chatroomudp.client.acknowledger;
-
-import com.chatroomudp.Packet;
+import com.chatroomudp.client.Acknowledger;
 
 public class Client implements Runnable {
 
-	private DatagramSocket s;
 	private boolean running;
 	public static final boolean DEBUGGING = false;
 
 	// server fields
-	private String ip;
 	private int port;
 	public static final String CONNECTION_CLOSED = "#CLOSED_CONNETION";
 
@@ -37,7 +33,7 @@ public class Client implements Runnable {
 	private DatagramSocket clientSocket;
 	private InetAddress IPAddress;
 	private Receiver receiver;
-	private acknowledger aacknowledger;
+	private Acknowledger aacknowledger;
 
 
 	/**
@@ -51,7 +47,6 @@ public class Client implements Runnable {
 	 * @pre addr != null
 	 */
 	public Client(String addr, int port) {
-		this.ip = addr;
 		this.port = port;
 		active = false;
 		try {
@@ -119,7 +114,7 @@ public class Client implements Runnable {
 		active = true;
 		// start the receiver
 		receiver = new Receiver(this);
-		aacknowledger = new acknowledger(this);
+		aacknowledger = new Acknowledger(this);
 		(new Thread(receiver)).start();
 		(new Thread(aacknowledger)).start();
 		String msg = sc.nextLine();
@@ -137,7 +132,10 @@ public class Client implements Runnable {
 	/**
 	 * sends a message to the remote client
 	 */
-	public void send(String message) {
+	public synchronized void send(String message) {
+		// don't send if ended connection
+		if (closed)
+			return;
 		byte[] sendData = new byte[1024];
 		sendData = message.getBytes();
 		DatagramPacket sendPacket = new DatagramPacket(sendData,

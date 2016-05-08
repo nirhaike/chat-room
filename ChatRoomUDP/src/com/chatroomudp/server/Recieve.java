@@ -8,17 +8,21 @@ import java.util.ArrayList;
 
 public class Recieve implements Runnable {
 
+	private Server server;
 	private ArrayList<DatagramPacket> list;
 	private DatagramSocket ss;
 	private byte[] receiveData;
 
-	public Recieve(DatagramSocket d) {
+	public Recieve(Server s, DatagramSocket ss) {
+		this.server = s;
 		list = new ArrayList<DatagramPacket>();
-		this.ss = d;
+		this.ss = ss;
 	}
 
 	static String ByteArr(byte[] b) {
 		byte[] c;
+		if (b == null)
+			return "";
 		for (int i = 0; i < b.length; i++) {
 			if (String.valueOf(b[i]).equals("0")) {
 				c = new byte[i];
@@ -36,8 +40,8 @@ public class Recieve implements Runnable {
 	}
 
 	public void run() {
-		while (true) {
-
+		// receive and store packets
+		while (server.isRunning()) {
 			receiveData = new byte[1024];
 			DatagramPacket receivePacket = new DatagramPacket(receiveData,
 					receiveData.length);
@@ -45,74 +49,62 @@ public class Recieve implements Runnable {
 				ss.receive(receivePacket);
 				list.add(receivePacket);
 			} catch (IOException e) {
-				e.printStackTrace();
-				System.out.println("i: " + " len: " + " " + "run");
+				// print only if the server is running
+				if (server.isRunning())
+					e.printStackTrace();
 			}
 		}
 
 	}
 
 	public synchronized DatagramPacket recv(String msg) {
-		DatagramPacket d = null;
-		boolean b = false;
-		DatagramPacket d1= null;
+		boolean goodPacket = false;
 
 		for (int i = 0; i < list.size(); i++) {
 			try {
-				d1 = list.get(i);
-				if (d1== null){
-					System.out.println("d ==null in revc");
-					System.out.println(list.get(i) == null);
-					return null;
-				}
-				b = ByteArr(d1.getData()).equals(msg);
+				DatagramPacket pack = list.get(i);
+				if (pack == null)
+					continue;
+				goodPacket = ByteArr(pack.getData()).equals(msg);
 			} catch (Exception e) {
 				e.printStackTrace();
 				System.out.println("i: " + i + " len: " + list.size() + " ");
 			}
-			if (b) {
-				d = list.get(i);
+			if (goodPacket) {
+				DatagramPacket retPacket = list.get(i);
 				list.remove(i);
-				return d;
+				return retPacket;
 			}
 		}
-		return d;
+		return null;
 	}
 
 	public synchronized String recv(InetAddress IPAddress, int port) {
 		String s = null;
-		DatagramPacket d = null;
 		for (int i = 0; i < list.size(); i++) {
-				d = list.get(i);
-			boolean b = false;
+			DatagramPacket pack = list.get(i);
+			if (pack == null)
+				continue;
+			boolean goodPacket = false;
 			try {
-				if (d==null){
-					System.out.println("d == null");
-					System.out.println(list.get(i) == null);
-					return null;
-				}
-				b = (d.getAddress().equals(IPAddress) && d.getPort() == port);
+				goodPacket = (pack.getAddress().equals(IPAddress) && pack.getPort() == port);
 			} catch (Exception e) {
-				e.printStackTrace();
-				System.out.println("i: " + i + " len: " + list.size() + " ");
-			}
-			if (b) {
-
-				try {
-					s = ByteArr(list.get(i).getData());
-				} catch (Exception e) {
+				if (server.isRunning())
 					e.printStackTrace();
-					System.out
-							.println("i: " + i + " len: " + list.size() + " ");
+			}
+			if (goodPacket) {
+				try {
+					s = ByteArr(pack.getData());
+				} catch (Exception e) {
+					if (server.isRunning())
+						e.printStackTrace();
 				}
 				try {
 					list.remove(i);
 				} catch (Exception e) {
-					e.printStackTrace();
-					System.out
-							.println("i: " + i + " len: " + list.size() + " ");
+					if (server.isRunning())
+						e.printStackTrace();
 				}
-
 				return s;
 
 			}

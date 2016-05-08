@@ -1,6 +1,5 @@
 package com.chatroomudp.server;
 
-import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.SocketException;
@@ -40,8 +39,7 @@ public class Server implements Runnable {
 			System.out.println("Can't listen on port " + PORT);
 		}
 		int currId = 0; 
-		byte[] receiveData = new byte[1024];
-		Recieve r = new Recieve(ss);
+		Recieve r = new Recieve(this, ss);
 		DatagramPacket receivePacket = null;
 		Thread clientR = new Thread(r);
 		clientR.start();
@@ -63,10 +61,8 @@ public class Server implements Runnable {
 				System.out.println("error server");
 			}
 		}
-		
-		
-		
 	}
+	
 	public synchronized void removeClient(ClientHandler client) {
 		for (int i = 0; i < clients.size(); i++) {
 			ClientHandler c = clients.get(i);
@@ -94,7 +90,6 @@ public class Server implements Runnable {
 	 * @post all the server functionality won't work
 	 */
 	public synchronized void close() {
-		System.out.println("here");
 		running = false;
 		ss.close();
 		for (int i = 0; i < clients.size(); i++) {
