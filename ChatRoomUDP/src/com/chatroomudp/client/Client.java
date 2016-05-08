@@ -6,9 +6,11 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.Scanner;
 
 import com.chatroom.Utils;
+import com.chatroomudp.Packet;
 import com.chatroomudp.client.Receiver;
 import com.chatroomudp.client.Acknowledger;
 
@@ -21,11 +23,20 @@ public class Client implements Runnable {
 	private int port;
 	public static final String CONNECTION_CLOSED = "#CLOSED_CONNETION";
 
+	public static final int MAX_HISTORY_SIZE = 100;
+	
 	public static final String SERVER_ACK = "servercheck";
 	public static final String CLIENT_RES = "servergood";
 
 	public static final String CLIENT_ACK = "clientcheck";
 	public static final String SERVER_RES = "clientgood";
+	
+	// save 100 last sent packets
+	private ArrayList<Packet> packetsHistory;
+	// last received packet id (to check if there's any missing message)
+	private int totalReceivedPackets;
+	private int totalSentPackets;
+	
 	// client fields
 	private String nickname;
 	private boolean active;
@@ -62,11 +73,10 @@ public class Client implements Runnable {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-
+		packetsHistory = new ArrayList<Packet>();
 	}
 
-	static String ByteArr(byte[] b) {
-
+	public static String ByteArr(byte[] b) {
 		// this function gets an array of byte and return a string of the array
 
 		byte[] c;
@@ -137,16 +147,48 @@ public class Client implements Runnable {
 		if (closed)
 			return;
 		byte[] sendData = new byte[1024];
-		sendData = message.getBytes();
+		// combine the index of the packet and the message
+		String packMsg = totalSentPackets + "," + message;
+		debug("sent " + packMsg);
+		sendData = (packMsg).getBytes();
 		DatagramPacket sendPacket = new DatagramPacket(sendData,
 				sendData.length, IPAddress, port);
 		try {
+			totalSentPackets++;
+			packetsHistory.add(new Packet(totalSentPackets, Receiver.getTime(), message));
+			// remove 1 packet if there's more than MAX_HISTORY_SIZE packets
+			if (packetsHistory.size() > MAX_HISTORY_SIZE)
+				packetsHistory.remove(0);
 			clientSocket.send(sendPacket);
 		} catch (IOException e) {
+			totalSentPackets--;
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
+	}
+	
+	public synchronized void resend(int startId) throws IOException {
+		debug("RESEND!");
+		// no history
+		if (packetsHistory == null || packetsHistory.size() == 0)
+			throw new IOException("no packet history");
+		// too old packet
+		if (packetsHistory.get(0).getId() > startId)
+			throw new IOException("Can't get back old packets");
+		
+		// get the first packet
+		int startHistoryId = startId - packetsHistory.get(0).getId();
+		
+		// requested too big number (didn't sent this amount of packets)
+		if (startHistoryId < 0)
+			throw new IOException("Packet not exists");
+		
+		totalSentPackets = startId - 1;
+		for (int i = startHistoryId; i < packetsHistory.size() - startHistoryId; i++) {
+			send(packetsHistory.get(i).getData());
+		}
+		
 	}
 
 	/**
@@ -171,7 +213,29 @@ public class Client implements Runnable {
 			return CONNECTION_CLOSED;
 		}
 		msg = ByteArr(receivePacket.getData());
-		return msg; // <- this is just a placeholder, never return null!
+		// serial number checks
+		if (msg == null)
+			return null;
+		totalReceivedPackets++;
+		int packId = Utils.getPacketId(msg);
+		String str = Utils.removeIdFromPacket(msg);
+		debug("got " + str);
+		// problem (packet not numbered / problematic number)
+		if (packId < 0) {
+			close();
+			// it's urgent to answer acknowledges, so we get them even if it's not the correct order
+			if (isAckPacket(str))
+				return str;
+			return "";
+		}
+		if (packId > totalReceivedPackets) {
+			// ask for the packets between totalReceivedPackets and packId
+			send("askpacket " + totalReceivedPackets);
+			if (isAckPacket(str))
+				return str;
+			return "";
+		}
+		return str;
 	}
 
 	/**
@@ -196,6 +260,10 @@ public class Client implements Runnable {
 	 */
 	public boolean isRunning() {
 		return running;
+	}
+	
+	public boolean isAckPacket(String msg) {
+		return (msg.equals(CLIENT_ACK) || msg.equals(CLIENT_RES));
 	}
 
 	public void debug(String msg) {

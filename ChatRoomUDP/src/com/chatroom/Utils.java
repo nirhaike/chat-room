@@ -63,10 +63,16 @@ public class Utils {
 	}
 	
 	public static int getPacketId(String str) {
+		if (str == null)
+			return -1;
 		if (str.contains(",")) {
 			return Utils.tryParse(str.substring(0, str.indexOf(",")));
 		}
 		return -1;
+	}
+	
+	public static String removeIdFromPacket(String str) {
+		return str.substring(str.indexOf(",") + 1);
 	}
 
 }

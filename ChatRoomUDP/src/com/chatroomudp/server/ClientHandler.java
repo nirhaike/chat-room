@@ -78,7 +78,6 @@ public class ClientHandler implements Runnable {
 			while (msg == null){
 				msg = receive();
 			}
-			server.debug(getId(), "GOT:" + msg);
 			
 			if (msg == null || !connected || msg == "Error") { // if											// disconnected
 				if (connected)
@@ -103,7 +102,15 @@ public class ClientHandler implements Runnable {
 				// it comes here when the server gets a message of CLIENT_RES
 				Packet p = new Packet(id, Receiver.getTime(), msg);
 				lastAck = p;
-
+			// packet restoring system
+			} else if (msg.startsWith("askpacket ")) {
+				int resendId = Integer.valueOf(msg.substring(10));
+				try {
+					resend(resendId);
+				} catch (IOException e) {
+					server.debug(id, "ERROR in resend!");
+					close(); // can't restore the connection
+				}
 			}
 		}
 	}
@@ -146,15 +153,41 @@ public class ClientHandler implements Runnable {
 	public void send(String msg) {
 		byte[] sendData = new byte[1024];
 
-		sendData = msg.getBytes();
+		totalSentPackets++;
+		String packMsg = totalSentPackets + "," + msg;
+		sendData = packMsg.getBytes();
 		DatagramPacket sendPacket = new DatagramPacket(sendData,
 				sendData.length, IPAddress, port);
 		try {
+			packetsHistory.add(new Packet(totalSentPackets, Receiver.getTime(), msg));
 			serverSocket.send(sendPacket);
-			totalSentPackets++;
 		} catch (IOException e) {
 			e.printStackTrace();
+			totalSentPackets--;
 			System.out.println("error send");
+		}
+		
+	}
+	
+	public synchronized void resend(int startId) throws IOException {
+		server.debug(id, "RESEND!");
+		// no history
+		if (packetsHistory == null || packetsHistory.size() == 0)
+			throw new IOException("no packet history");
+		// too old packet
+		if (packetsHistory.get(0).getId() > startId)
+			throw new IOException("Can't get back old packets");
+		
+		// get the first packet
+		int startHistoryId = startId - packetsHistory.get(0).getId();
+		
+		// requested too big number (didn't sent this amount of packets)
+		if (startHistoryId < 0)
+			throw new IOException("Packet not exists");
+		
+		totalSentPackets = startId - 1;
+		for (int i = startHistoryId; i < packetsHistory.size() - startHistoryId; i++) {
+			send(packetsHistory.get(i).getData());
 		}
 		
 	}
@@ -179,11 +212,10 @@ public class ClientHandler implements Runnable {
 	public synchronized void close() {
 			if (this.connected) {
 				this.connected = false;
-				packetsHistory = null;
 				server.broadcast(Utils.getTime() + " " + getNickname() + "-"
 						+ getId() + " disconnected");
 				server.removeClient(this);
-
+				packetsHistory = null;
 			}
 		}
 	
@@ -232,21 +264,34 @@ public class ClientHandler implements Runnable {
 	}
 
 	
+	public boolean isAckPacket(String msg) {
+		return (msg.equals(SERVER_ACK) || msg.equals(SERVER_RES));
+	}
+	
+	
 	public String receive() {
 		String str = r.recv(IPAddress, port);
-		/*
+		if (str == null)
+			return null;
+		server.debug(id, "got " + str);
 		totalReceivedPackets++;
 		int packId = Utils.getPacketId(str);
+		str = Utils.removeIdFromPacket(str);
 		// problem (packet not numbered / problematic number)
-		if (packId < totalReceivedPackets) {
+		if (packId < 0) {
 			close();
+			// it's urgent to answer acknowledges, so we get them even if it's not the correct order
+			if (isAckPacket(str))
+				return str;
 			return "";
 		}
 		if (packId > totalReceivedPackets) {
 			// ask for the packets between totalReceivedPackets and packId
 			send("askpacket " + totalReceivedPackets);
+			if (isAckPacket(str))
+				return str;
 			return "";
-		}*/
+		}
 		return str;
 	}
 }

@@ -56,6 +56,17 @@ public class Receiver implements Runnable {
 				client.debug(Utils.getTime() + " Responded!");
 				client.send(Client.CLIENT_RES);
 			}
+			// lost packet request
+			else if (data.startsWith("askpacket ")) {
+				int id = Integer.valueOf(data.substring(10));
+				try {
+					client.resend(id);
+				} catch (IOException e) {
+					client.debug("ERROR in resend!");
+					client.close(); // can't restore the connection
+				}
+			}
+			
 			// a message packet
 			else {
 				System.out.println(data);

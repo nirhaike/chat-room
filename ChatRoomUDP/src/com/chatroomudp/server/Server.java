@@ -45,7 +45,7 @@ public class Server implements Runnable {
 		clientR.start();
 		while (running) {
 			try{
-			receivePacket = r.recv("connect");
+			receivePacket = r.recv("0,connect");
 			if( receivePacket != null){
 				ClientHandler handler = new ClientHandler(receivePacket, currId++, this,r);
 				Thread clientThread = new Thread(handler);
