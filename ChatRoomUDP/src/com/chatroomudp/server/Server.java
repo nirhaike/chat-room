@@ -6,20 +6,24 @@ import java.net.SocketException;
 import java.util.ArrayList;
 
 import com.chatroom.Utils;
+import com.chatroomudp.server.TerminatingService;
 import com.chatroomudp.server.ClientHandler;
 
 
 
 
 public class Server implements Runnable {
-	public static final int PORT = 6656;
+	public static final int PORT = 1234;
 	public static final boolean DEBUGGING = false;
 
+	private TerminatingService terminateService;
 	private ArrayList<ClientHandler> clients;
 	private DatagramSocket ss;
 	private boolean running;
 	
 	public Server() {
+		terminateService = new TerminatingService(this);
+		(new Thread(terminateService)).start();
 		clients = new ArrayList<ClientHandler>();
 		running = false;
 		ss = null;
@@ -43,6 +47,8 @@ public class Server implements Runnable {
 		DatagramPacket receivePacket = null;
 		Thread clientR = new Thread(r);
 		clientR.start();
+		// start terminating (there's no client right now) 
+		terminateService.startTerminating();
 		while (running) {
 			try{
 			receivePacket = r.recv("0,connect");
@@ -51,6 +57,8 @@ public class Server implements Runnable {
 				Thread clientThread = new Thread(handler);
 				clientThread.start();
 				clients.add(handler);
+				// stop terminating
+				terminateService.stopTerminating();
 				debug(-1, "started client");
 			}
 
@@ -70,6 +78,10 @@ public class Server implements Runnable {
 				clients.remove(i);
 				return;
 			}
+		}
+		// start terminating if there's no client
+		if (clients.size() == 0) { 
+			terminateService.startTerminating();
 		}
 	}
 	/**
@@ -97,6 +109,7 @@ public class Server implements Runnable {
 			client.close();
 			i--;
 		}
+		terminateService.close();
 		debug(-1, "Server closed safety");
 	}
 	public void debug(int id, String str) {

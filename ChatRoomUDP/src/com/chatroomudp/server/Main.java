@@ -20,7 +20,7 @@ public class Main {
 			System.out.println("error main");
 		}
 		String command = sc.nextLine();
-		while (!command.equals("-q")) {
+		while (!command.equals("-q") && server.isRunning()) {
 			command = sc.nextLine();
 		}
 		// close the server
